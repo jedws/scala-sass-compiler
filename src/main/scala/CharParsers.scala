@@ -14,23 +14,24 @@ class CharParsers extends Parsers {
 
   def chrExcept(cs: Char*) = elem("", ch => (cs forall (ch !=)))
 
-  def ident: Parser[String] = rep1(letter|'_') ^^ (_.mkString)
+  def ident: Parser[String] = rep1(letter | '_') ^^ (_.mkString)
 
-  def num = intPart ~ opt(fracPart) ~ opt(expPart) ^^ { case i ~ f ~ e =>
-    i + optString(".", f) + optString("", e)
+  def num = intPart ~ opt(fracPart) ~ opt(expPart) ^^ {
+    case i ~ f ~ e =>
+      i + optString(".", f) + optString("", e)
   }
   def intPart = zero | intList
-  def intList = nonzero ~ rep(digit) ^^ {case x ~ y => (x :: y) mkString ""}
+  def intList = nonzero ~ rep(digit) ^^ { case x ~ y => (x :: y) mkString "" }
   def fracPart = '.' ~> rep(digit) ^^ { _ mkString "" }
-  def expPart = exponent ~ opt(sign) ~ rep1(digit) ^^ { case e ~ s ~ d =>
-    e + optString("", s) + d.mkString("")
+  def expPart = exponent ~ opt(sign) ~ rep1(digit) ^^ {
+    case e ~ s ~ d => e + optString("", s) + d.mkString("")
   }
 
   private def optString[A](pre: String, a: Option[A]) = a match {
     case Some(x) => pre + x.toString
-    case None => ""
+    case None    => ""
   }
-  
+
   def zero: Parser[String] = '0' ^^^ "0"
   def nonzero = elem("nonzero digit", d => d.isDigit && d != '0')
   def exponent = elem("exponent character", d => d == 'e' || d == 'E')
@@ -40,18 +41,18 @@ class CharParsers extends Parsers {
 
   def charSeq: Parser[String] =
     ('\\' ~ '\"' ^^^ "\""
-    |'\\' ~ '\\' ^^^ "\\"
-    |'\\' ~ '/'  ^^^ "/"
-    |'\\' ~ 'b'  ^^^ "\b"
-    |'\\' ~ 'f'  ^^^ "\f"
-    |'\\' ~ 'n'  ^^^ "\n"
-    |'\\' ~ 'r'  ^^^ "\r"
-    |'\\' ~ 't'  ^^^ "\t"
-    |'\\' ~> 'u' ~> unicodeBlock)
-  
+      | '\\' ~ '\\' ^^^ "\\"
+      | '\\' ~ '/' ^^^ "/"
+      | '\\' ~ 'b' ^^^ "\b"
+      | '\\' ~ 'f' ^^^ "\f"
+      | '\\' ~ 'n' ^^^ "\n"
+      | '\\' ~ 'r' ^^^ "\r"
+      | '\\' ~ 't' ^^^ "\t"
+      | '\\' ~> 'u' ~> unicodeBlock)
+
   val hexDigits = Set[Char]() ++ "0123456789abcdefABCDEF".toArray
   def hexDigit = elem("hex digit", hexDigits.contains(_))
-  
+
   private def unicodeBlock = hexDigit ~ hexDigit ~ hexDigit ~ hexDigit ^^ {
     case a ~ b ~ c ~ d =>
       new String(Array(Integer.parseInt(List(a, b, c, d) mkString "", 16)), 0, 1)
@@ -71,15 +72,15 @@ class CharParsers extends Parsers {
       }
       if (i == s.length)
         Success(source.subSequence(offset, j).toString, in.drop(j - offset))
-      else 
-        Failure("`"+s+"' expected but `"+in.first+"' found", in)
+      else
+        Failure("`" + s + "' expected but `" + in.first + "' found", in)
     }
   }
 
-  def sp: Parser[String] = rep(' ') ^^ {_.mkString}
-  def sp1: Parser[String] = rep1(' ') ^^ {_.mkString}
-  def lf: Parser[String] = rep1(sp ~ "\n") ^^ {_.mkString}
-  def ws: Parser[String] = rep("\n"|"\t"|" ") ^^ {_.mkString}
+  def sp: Parser[String] = rep(' ') ^^ { _.mkString }
+  def sp1: Parser[String] = rep1(' ') ^^ { _.mkString }
+  def lf: Parser[String] = rep1(sp ~ "\n") ^^ { _.mkString }
+  def ws: Parser[String] = rep("\n" | "\t" | " ") ^^ { _.mkString }
   def eof: Parser[Char] = EofCh
 
   def parse[T](p: Parser[T], in: Reader[Char]): ParseResult[T] = phrase(p)(in)
