@@ -39,25 +39,25 @@ class SassSpec extends Specification {
     }
  
     "parse a script with simple constants" in {
-      val result = Sass("!test_color = black\ndiv#main a, .sidebar p\n  :font-size 10px\n  :font-color = !test_color\n")
+      val result = Sass("$test_color = black\ndiv#main a, .sidebar p\n  :font-size 10px\n  :font-color = $test_color\n")
       result.successful mustBe true
       result.get must beEqualTo("div#main a, .sidebar p { font-size:10px; font-color:black; }\n")
     }
 
     "parse a script with calculated constants" in {
-      val result = Sass("!test_size = 10px\ndiv#main a\n  :font-size = !test_size + 13px\n")
+      val result = Sass("$test_size = 10px\ndiv#main a\n  :font-size = $test_size + 13px\n")
       result.successful mustBe true
       result.get must beEqualTo("div#main a { font-size:23px; }\n")
     }
 
     "parse a script with calculated color constants" in {
-      val result = Sass("!test_color = #123\n!other_color = !test_color + 20\ndiv#main a\n  :background-color = !other_color\n")
+      val result = Sass("$test_color = #123\n$other_color = $test_color + 20\ndiv#main a\n  :background-color = $other_color\n")
       result.successful mustBe true
       result.get must beEqualTo("div#main a { background-color:#253647; }\n")
     }
 
     "parse a script with complex calculated constants" in {
-      val result = Sass("!partial_border = 5px / 2 \"solid\"\n!test_color = #123\n!other_color = !test_color - 1\n!border = !partial_border (!other_color + #111)\ndiv#main a\n  :border = !border\ndiv#other\n  :border = 10/2px (!other_color + #222) dashed\n")
+      val result = Sass("$partial_border = 5px / 2 \"solid\"\n$test_color = #123\n$other_color = $test_color - 1\n$border = $partial_border ($other_color + #111)\ndiv#main a\n  :border = $border\ndiv#other\n  :border = 10/2px ($other_color + #222) dashed\n")
       result.successful mustBe true
       result.get must beEqualTo("div#main a { border:2.5px solid #213243; }\ndiv#other { border:5px #324354 dashed; }\n")
     }

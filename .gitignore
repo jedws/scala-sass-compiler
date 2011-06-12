@@ -4,3 +4,6 @@ project/boot
 /.classpath
 /.project
 /.settings
+/.scala_dependencies
+/project/plugins/project
+/project/plugins/src_managed
