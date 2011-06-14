@@ -63,7 +63,7 @@ class SassCompiler extends CharParsers {
     val newValue = ConstantValueRegex.findAllIn(value).foldLeft(value)((r, m) => r.replace(m, lookup.getOrElse(m, m)))
     if (newValue == value) value else replaceConstants(newValue, lookup)
   }
-  val ConstantValueRegex = """(\$\S+)""".r
+  val ConstantValueRegex = """([$]\S+)""".r
 
   def script: Parser[String] =
     rep1(rep(constant) ~ rep1(ruleset(0))) <~ eof ^^ {
@@ -81,7 +81,7 @@ class SassCompiler extends CharParsers {
     }
 
   def constant: Parser[Constant] =
-    ('$' ~> rep1(ident | num | '-') <~ sp ~ '=') ~ propertyValue <~ lf ^^ {
+    ('$' ~> rep1(ident | num | '-') <~ sp ~ ':') ~ propertyValue <~ lf ^^ {
       case k ~ v => Constant("$" + k.mkString, v)
     }
 
@@ -107,9 +107,9 @@ class SassCompiler extends CharParsers {
       case p ~ npl => npl.map(np => Property(p + "-" + np.head.name, np.head.value))
     }
 
-  def propertyName: Parser[String] = ':' ~> rep1(ident | '-') ^^ { _.mkString }
+  def propertyName: Parser[String] = rep1(ident | '-') <~ rep(':') ^^ { _.mkString }
 
-  def propertyValue: Parser[String] = sp1 ~> rep(ident | num | string | sp1 | '=' | '#' | '/' | '$' | '-' | '+' | '(' | ')') ^^ { _.mkString }
+  def propertyValue: Parser[String] = sp1 ~> rep(ident | num | string | sp1 | '#' | '/' | '$' | '-' | '+' | '(' | ')') ^^ { _.mkString }
 
   def indent(expected: Int): Parser[String] = repN(expected, " ") ^^ (_.mkString)
 
@@ -120,7 +120,7 @@ class SassCompiler extends CharParsers {
         Property(name, parseConstant(replaceConstants(x, constants))).toString
       case x => toString
     }
-    private val ConstantValueRegex = """=\s+(.*)""".r
+    private val ConstantValueRegex = """\s*(.*)""".r
   }
 
   case class Selector(val name: String) {
