@@ -107,7 +107,7 @@ class SassCompiler extends CharParsers {
       case p ~ npl => npl.map(np => Property(p + "-" + np.head.name, np.head.value))
     }
 
-  def propertyName: Parser[String] = rep1(ident | '-') <~ rep(':') ^^ { _.mkString }
+  def propertyName: Parser[String] = rep1(ident | '-') <~ elem(':') ^^ { _.mkString }
 
   def propertyValue: Parser[String] = sp1 ~> rep(ident | num | string | sp1 | '#' | '/' | '$' | '-' | '+' | '(' | ')') ^^ { _.mkString }
 

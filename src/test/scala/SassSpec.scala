@@ -45,7 +45,41 @@ class SassSpec extends Specification {
       result.successful mustBe true
       result.get must beEqualTo("div#main a, .sidebar p { font-size:10px; }\ndiv#main a:after, .sidebar p:after { margin-top:10px; }\n")
     }
+    
+    "parse a script with parent references in child selector" in {
+      val result = Sass("""a
+  font-weight: bold
+  text-decoration: none
+  &:hover
+    text-decoration: underline
+  body.firefox &
+    font-weight: normal
+""")
+      val expected = """a { font-weight:bold; text-decoration:none; }
+a:hover { text-decoration:underline; }
+body.firefox a { font-weight:normal; }
+"""
+      result.successful mustBe true
+      result.get must beEqualTo(expected)
+    }
  
+    "parse a script with deeply nested parent selectors" in {
+      val result = Sass("""#main
+  color: black
+  a
+    font-weight: bold
+    &:hover
+      color: red
+""")
+      val expected = """#main { color:black; }
+#main a { font-weight:bold; }
+#main a:hover { color:red; }
+"""
+        
+      result.successful mustBe true
+      result.get must beEqualTo(expected)
+    }
+    
     "parse a script with simple math expressions" in {
       val result = Sass("a\n  color: #123 + 20\n")
       result.successful mustBe true
