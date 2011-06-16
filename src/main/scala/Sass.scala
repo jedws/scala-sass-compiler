@@ -2,15 +2,16 @@ package net.fyrie
 package sass
 
 import parsing.CharParsers
+import io.Source
+import util.parsing.input.Reader
 
 object Sass {
-  def apply(in: String) = {
-    val c = new SassCompiler
-    c.parse(in)
-  }
+  def apply(in: Reader[Char]) = new SassCompiler().parse(in)
+  def apply(in: CharSequence) = new SassCompiler().parse(in)
+  def apply(in: java.io.Reader) = new SassCompiler().parse(in)
 }
 
-class SassCompiler extends CharParsers {
+private[sass] class SassCompiler extends CharParsers {
 
   def expr: Parser[Value] = value ~ rep(op ~ value) ^^ {
     case x ~ list => list.foldLeft(x)((r, n) => n match { case o ~ y => o(r, y) })
@@ -95,7 +96,7 @@ class SassCompiler extends CharParsers {
 
   def selector: Parser[Selector] =
     sp ~> rep1(ident | num | '#' | '.' | '&' | ':' | '-' | sp1) <~ sp ^^ { x => Selector(x.mkString) }
-    
+
   def properties(curIndent: Int): Parser[List[Property]] =
     rep(property(curIndent) | nestedProperties(curIndent)) ^^ { pl => pl.flatMap(p => p) }
 
@@ -142,9 +143,15 @@ class SassCompiler extends CharParsers {
 
   case class Constant(val name: String, val value: String)
 
-  def parse(in: scala.util.parsing.input.Reader[Char]): ParseResult[String] = parse(script, in)
-  def parse(in: java.lang.CharSequence): ParseResult[String] = parse(script, in)
-  def parse(in: java.io.Reader): ParseResult[String] = parse(script, in)
+  /** for the parse methods so they export something the world understands */
+  implicit def toEither(r: ParseResult[String]): Either[Invalid, String] = r match {
+    case Success(msg, _)   => Right(msg)
+    case NoSuccess(msg, _) => Left(InvalidString(msg))
+  }
+
+  def parse(in: Reader[Char]): Either[Invalid, String] = parse(script, in)
+  def parse(in: java.lang.CharSequence): Either[Invalid, String] = parse(script, in)
+  def parse(in: java.io.Reader): Either[Invalid, String] = parse(script, in)
 }
 
 sealed abstract class Value {
