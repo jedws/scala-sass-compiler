@@ -1,23 +1,30 @@
 package net.fyrie.sass
 
-import util.parsing.input.StreamReader
+import util.parsing.input.{ Reader, StreamReader }
 import util.parsing.combinator.Parsers
 
+/** Interface to be used by external processes.
+ */
 object Compile {
   def main(args: Array[String]) {
-    val in = args(0)
-    val out = args(1)
-    file(in).fold(handleInvalid, write(out, _))
+    apply(args(0)).fold(handleInvalid, write(args(1), _))
   }
 
-  def file(name: String): Either[Invalid, String] = Load(name).right.flatMap { Sass(_) }
+  def apply(fileName: String): Either[Invalid, String] =
+    Load(fileName).right.flatMap { Sass(_) }
 
-  def write(name: String, s: String) = println("########: " + s)
+  def compile(in: String, out: String): Option[Invalid] =
+    apply(in).fold(Some(_), write(out, _))
 
-  def handleInvalid(i: Invalid) = println(i)
+  private[sass] def write(fileName: String, s: String): Option[Invalid] =
+    returning(None) { println("########: " + s) }
+
+  private[sass] def handleInvalid(i: Invalid): Invalid =
+    returning(i) { println(i) }
 }
 
 object Load {
-  def apply(name: String): Either[Invalid, StreamReader] = either { StreamReader(io.Source.fromFile(name).bufferedReader) }
+  def apply(fileName: String): Either[Invalid, Reader[Char]] =
+    either { StreamReader(io.Source.fromFile(fileName).bufferedReader) }
 }
 
