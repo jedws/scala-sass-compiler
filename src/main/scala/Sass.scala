@@ -95,7 +95,7 @@ class SassCompiler extends CharParsers {
 
   def selector: Parser[Selector] =
     sp ~> rep1(ident | num | '#' | '.' | '&' | ':' | '-' | sp1) <~ sp ^^ { x => Selector(x.mkString) }
-
+    
   def properties(curIndent: Int): Parser[List[Property]] =
     rep(property(curIndent) | nestedProperties(curIndent)) ^^ { pl => pl.flatMap(p => p) }
 
@@ -104,6 +104,7 @@ class SassCompiler extends CharParsers {
 
   def nestedProperties(curIndent: Int): Parser[List[Property]] =
     indent(curIndent) ~> (propertyName <~ lf) ~ rep1(property(curIndent + 2)) ^^ {
+      //case List(Property(p,v)) ~ npl => Property(p, v) :: npl.map(np => Property(p + "-" + np.head.name, np.head.value))
       case p ~ npl => npl.map(np => Property(p + "-" + np.head.name, np.head.value))
     }
 

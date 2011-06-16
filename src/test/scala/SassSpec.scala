@@ -75,10 +75,37 @@ body.firefox a { font-weight:normal; }
 #main a { font-weight:bold; }
 #main a:hover { color:red; }
 """
-        
       result.successful mustBe true
       result.get must beEqualTo(expected)
     }
+    
+    "parse a script with font namespaces" in {
+      val result = Sass(""".funky
+  font:
+    family: fantasy
+    size: 30em
+    weight: bold
+""")
+      val expected = """.funky { font-family:fantasy; font-size:30em; font-weight:bold; }
+"""
+      result.successful mustBe true
+      result.get must beEqualTo(expected)
+    }
+
+    /*
+    "parse a script with value namespace" in {
+      val result = Sass(""".funky
+  font: 2px/3px
+    family: fantasy
+    size: 30em
+    weight: bold
+""")
+
+      val expected = """.funky { font:2px/3px; font-family:fantasy; font-size:30em; font-weight:bold; }
+"""
+      result.successful mustBe true
+      result.get must beEqualTo(expected)
+    }*/
     
     "parse a script with simple math expressions" in {
       val result = Sass("a\n  color: #123 + 20\n")
