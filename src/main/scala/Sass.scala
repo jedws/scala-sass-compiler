@@ -146,7 +146,7 @@ private[sass] class SassCompiler extends CharParsers {
   /** for the parse methods so they export something the world understands */
   implicit def toEither(r: ParseResult[String]): Either[Invalid, String] = r match {
     case Success(msg, _)   => Right(msg)
-    case NoSuccess(msg, _) => Left(InvalidString(msg))
+    case NoSuccess(msg, _) => Left(CompileError(msg))
   }
 
   def parse(in: Reader[Char]): Either[Invalid, String] = parse(script, in)
